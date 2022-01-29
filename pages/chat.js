@@ -2,23 +2,50 @@ import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import { isValidElement } from 'react/cjs/react.production.min';
 import appConfig from '../config.json';
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzQyNjY3NywiZXhwIjoxOTU5MDAyNjc3fQ.LLuHB40c7PfToXTl28arsMiuKyokw8NX2HF63lTR4QU';
+const SUPABASE_URL = 'https://zfimeysxxmpbjedxahhp.supabase.co';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 
 export default function ChatPage() {
     const [message, setMessage] = React.useState('');
     const [messageList, setMessageList] = React.useState([]);
 
+    React.useEffect(() => 
+    {
+        const result = supabaseClient
+                        .from('messages')
+                        .select('*')
+                        .order('id', {ascending : false})
+                        .then(({data}) =>
+                        {
+                            setMessageList(data);
+                        });
+    }), [];
+    
     function handleNewMessage(newMessage) {
         const messageObj =
         {
-            id: messageList.length + 1,
             from: 'erickhsn',
             text: newMessage
         };
-        setMessageList([
-            messageObj,
-            ...messageList
-        ])
+
+        supabaseClient
+            .from('messages')
+            .insert([
+                messageObj
+            ])
+            .then(({data}) => 
+            {
+                setMessageList([
+                    data[0],
+                    ...messageList
+                ]);
+            });
+
         setMessage('');
     }
 
@@ -161,7 +188,7 @@ function MessageList(props) {
                                     display: 'inline-block',
                                     marginRight: '8px',
                                 }}
-                                src={`https://github.com/erickhsn.png`}
+                                src={`https://github.com/${message.from}.png`}
                             />
                             <Text tag="strong">
                                 {message.from}
